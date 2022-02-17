@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#000000#000000#FFFFFF#000000#000000#000000#000000#!/usr/bin/python3
 
 # Copyright 2020 Josh Pieper, jjp@pobox.com.
 #
@@ -11,7 +11,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# See the License for the specific langauge governing permissions and
 # limitations under the License.
 
 import argparse
@@ -23,6 +23,8 @@ import time
 # How much wire is dispensed for one full revolution of the drive
 # wheel.
 DRIVE_SCALE_CM = 6.5 * math.pi
+#DRIVE_SCALE_CM = 6.1 * math.pi
+#DRIVE_SCALE_CM = 18.4
 
 PRIME_ADVANCE_CM = 1.0
 STRIP_EXTRA_RETRACT_CM = 1.0
@@ -103,19 +105,30 @@ class Application:
             maximum_torque=1.0,
             watchdog_timeout=math.nan)
 
-    async def cut_strip(self, extra=False):
+    async def cut_strip(self, gauge, extra=False):
         '''Engage the cutter to puncture the insulation, but not the wire.
         Leave it there.
         '''
-        
-        
+        #print(args.gauge)
+        if gauge == 0:
+            strip_pos = .12
+        if gauge == 1:
+            strip_pos = .03
+        if gauge == 2:
+            strip_pos = .03
+        if gauge == 3:
+            strip_pos = .03
+        if gauge == 4:
+            strip_pos = .03
+        if gauge == 5:
+            strip_pos = .03
 
         while True:
             result = await self.cut.set_position(
                 position=math.nan,
                 velocity=.5,
                 maximum_torque=1.5,
-                stop_position=0.03,
+                stop_position=strip_pos,
                 feedforward_torque=-0.1,
                 watchdog_timeout=math.nan,
                 query=True)
@@ -130,7 +143,7 @@ class Application:
                 position=math.nan,
                 velocity=4.0,
                 maximum_torque=1.0,
-                stop_position=0.020,
+                stop_position=strip_pos,
                 feedforward_torque=-0.05,
                 watchdog_timeout=math.nan,
                 query=True)
@@ -203,7 +216,7 @@ class Application:
                 await self.drive_advance(args.strip)
                 await self.debug_delay()
 
-                await self.cut_strip(args.guage)
+                await self.cut_strip(args.gauge)
                 await self.debug_delay()
 
                     #await self.drive_advance(-STRIP_EXTRA_RETRACT_CM, kp=4)
@@ -216,7 +229,7 @@ class Application:
                 await self.drive_advance(args.length - args.cut)
                 await self.debug_delay()
 
-                await self.cut_strip(extra=True)
+                await self.cut_strip(args.gauge, extra=True)
                 await asyncio.sleep(0.1)
 
                 await self.cut_release()
@@ -241,7 +254,7 @@ async def main():
                         help='spool and cut a small amount of wire to begin with')
     parser.add_argument('-n', '--count', type=int, default=1,
                         help='make this many instances')
-    parser.add_argument('-g', '--guage', type=float, default=0.03,
+    parser.add_argument('-g', '--gauge', type=int, default=0,
                         help='set stop position for strip')
     parser.add_argument('--slow', action='store_true',
                         help='add debugging delays')
@@ -260,8 +273,8 @@ async def main():
             await app.cut_break()
         elif args.action == 'stop':
             await app.stop()
-        elif args.action == 'strip':
-            await app.cut_strip()
+        elif args.action.startswith('strip'):
+            await app.cut_strip(float(args.action.split('_')[1]))
         elif args.action == 'release':
             await app.cut_release()
         elif args.action.startswith('advance'):
