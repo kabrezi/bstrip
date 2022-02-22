@@ -22,7 +22,7 @@ import time
 
 # How much wire is dispensed for one full revolution of the drive
 # wheel.
-DRIVE_SCALE_CM = 6.5 * math.pi
+DRIVE_SCALE_CM = 6.05 * math.pi
 #DRIVE_SCALE_CM = 6.1 * math.pi
 #DRIVE_SCALE_CM = 18.4
 
@@ -122,6 +122,14 @@ class Application:
             strip_pos = .03
         if gauge == 5:
             strip_pos = .03
+        if gauge == 6:
+            strip_pos = .03
+        if gauge == 7:
+            strip_pos = .03
+        if gauge == 8:
+            strip_pos = .03
+        if gauge == 9:
+            strip_pos = .03
 
         while True:
             result = await self.cut.set_position(
@@ -177,13 +185,14 @@ class Application:
         '''Move the drive to the given distance as measured from the "wire
         start".
         '''
+        await self.set_wire_start()
 
         desired_pos = self.wire_start + distance_cm / DRIVE_SCALE_CM
 
         while True:
             result = await self.drive.set_position(
                 position=math.nan,
-                velocity=2.0,
+                velocity=1.0,
                 maximum_torque=2.0,
                 stop_position=desired_pos,
                 watchdog_timeout=math.nan,

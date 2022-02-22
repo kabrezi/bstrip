@@ -35,7 +35,7 @@ Obj_Num = []
     
 # print(arr)
 
-ser = serial.Serial ("/dev/ttyUSB1",9600, 8, 'N', 1, timeout=.1)
+ser = serial.Serial ("/dev/ttyUSB0",9600, 8, 'N', 1, timeout=.1)
 while True:# main while loop
 
     output = ser.readline()
@@ -116,8 +116,8 @@ while True:# main while loop
             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -a break')
             
         #Manual feed Forward program call, increment forward by 3cm
-        if len(Obj_Num) >0 and Page_Num == 2 and Obj_Num[1] ==10:
-            if Obj_Num[1] ==10:
+        if len(Obj_Num) >0 and Page_Num == 2 and Obj_Num[1] ==7:
+            if Obj_Num[1] ==7:
                 os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -a advance_3')
             else:
                 print('stop')
