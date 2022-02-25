@@ -10,7 +10,8 @@ import serial, string
 import re, struct
 from array import *
 import os, numpy
-
+global ready_rio
+global rio_stop
 
 r = 255
 r1 = 101
@@ -23,7 +24,8 @@ rio_stop=[]
 ready_rio=0
 x=0
 terminator = b'\xff\xff\xff'
-butt_text = str.encode('b0.txt=\"begin\"')
+butt_text = str.encode('b0.txt=\"ready ?\"')
+end_text = str.encode('b0.txt=\"finished\"')
 # butt_text = str.encode('b0.txt=\'+str(r)')
 # butt_text = str.encode('b0.txt=\''+str(r))
 
@@ -59,7 +61,7 @@ def custom(Obj_Num):
               + str(strip_b_flt) + ' -n ' + str(Quantity)
               + ' -g ' + str(Wire_Ga))
     
-def RIO_PNL(arr, rio_stop, ready_rio, x):
+def RIO_PNL(arr, x):
     
     rio_wire_gauge_list = []
     Page_Num = []
@@ -68,6 +70,9 @@ def RIO_PNL(arr, rio_stop, ready_rio, x):
     Obj_Num.extend(arr)
     Wire_Ga = Obj_Num[3]
     mult=Obj_Num[4]
+    global ready_rio
+    global rio_stop
+    length=0
     #print(Wire_Ga)
     #print(rio_stop)
     '''A seperate routine to read Build Kit One CSV'''
@@ -88,35 +93,31 @@ def RIO_PNL(arr, rio_stop, ready_rio, x):
             SA =float(row['Strip A'])
             SB =float(row['Strip B'])
             OAL =float(row['OAL'])
-            #sa =SA/10
             exq =Q*mult
             print(Q, W, SA, SB, OAL)
+            #oal=bytearray(struct.pack("d",OAL))
+            #print(oal)
+            print(struct.pack("d",OAL))
+            print(struct.pack("f",OAL))
+            oal=(struct.pack("b",OAL))
+            #print(length)
             ser.write(butt_text + terminator)
-#             print('sleeping')
-# #             if ready_rio==0:
-# #                 print(x)
-# #                 time.sleep(x)
-#             if ready_rio==0:
-# #                 x = x+.25
-#                 print(x)
-#             time.sleep(x)
-#             print('ready pressed')
-            #while ready_rio==0:
-                #print(ready_rio)
+            print(butt_text + terminator)
+            while ready_rio==0:
+                time.sleep(.25)
+            #ser.write(end_text + terminator)
             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
                   + str(OAL) + ' -s ' + str(SA) + ' -c '
                   + str(SB) + ' -n ' + str(exq)
                   + ' -g ' + str(W))
-#                 elseif:
-#                     sleep(5)
-                #ready_rio=1
-                #print(ready_rio)
-#             ready_rio=0
+
+            ready_rio=0
             Q=[]
             W=[]
             SA=[]
             SB=[]
             OAL=[]
+            ser.write(end_text + terminator)
             if rio_stop==1:
                 print('stop_pressed')
                 break
@@ -136,10 +137,9 @@ while True:
     task3 = Thread(target=release, args=[])
     task4 = Thread(target=fullcut, args=[])
     task5 = Thread(target=custom, args=[Obj_Num])
-    task6 = Thread(target=RIO_PNL, args=[arr,rio_stop,ready_rio,x])
+    task6 = Thread(target=RIO_PNL, args=[arr,x])
     Page_Num=[]
     Obj_Num=[]
-    #ready_rio=0
     
     if len(arr) >1:
         Page_Num = arr[0]
@@ -172,40 +172,12 @@ while True:
         
     if len(arr) >1 and arr[0]==5 and arr[1]==5:
         rio_stop=1
-    #if not len(arr) >1 and arr[0]==5 and arr[1]==8:
 
-#         ready_rio=0
-#         time.sleep(5)
-    #if len(arr) >1 and arr[0]==5 and arr[1]==8:
-        #ready_rio=1
-        
-#     if len(arr) >1:
-#         if arr[0]==5 and arr[1]==8:
-#             ready_rio=1
-#             x=0
-#             print(x)
-#     if ready_rio==0:
-#         x = x+.25
-#         print(x)
-#         ready_rio=0
+    if len(arr) >1 and arr[0]==5 and arr[1]==8:
+        ready_rio=1
+    if ready_rio==0:
+        A='keith'+str(ready_rio)
+
     
 
 
-# def say_after(delay, what):
-#     print(time.time(),'Start say_after(%s, %s)' % (delay,what))
-#     time.sleep(delay)
-#     print(time.time(),what)
-# 
-# start_time = time.time()
-# print(start_time, 'Before creating tasks.')
-# task1 = Thread(target=say_after, args=[1, 'hello'])
-# task2 = Thread(target=say_after, args=[2, 'world'])
-# task1.start()
-# task2.start()   
-# print(time.time(),"Before delay - after creating tasks")
-# time.sleep(3)
-# print(time.time(),"After delay - before await tasks")
-# task1.join()
-# task2.join()
-# end_time = time.time()
-# print('Total time elapsed: %.2f seconds' % (end_time - start_time)) 

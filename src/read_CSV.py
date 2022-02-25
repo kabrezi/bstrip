@@ -22,93 +22,52 @@ arr = []
 Page_Num = []
 rio_wire_gauge_list = []
 Wire_Ga = []
+rio_stop =[]
 
 
 
-
-async def Rio(arr):
+async def Rio(arr, rio_stop):
     Page_Num = []
     Obj_Num = []
     Page_Num = arr[0]
     Obj_Num.extend(arr)
     Wire_Ga = Obj_Num[3]
     print(Wire_Ga)
+    print(rio_stop)
     '''A seperate routine to read Build Kit One CSV'''
     
     with open ('/home/pi/bstrip/src/BK1.csv', "r") as Build_One:
         f = csv.DictReader(Build_One)#print(B1_List)#print(B1_List[0]['Quantity'])#print(B1_List[1]['Quantity'])
-        B1_List = list(f)           
+        B1_List = list(f)
+        #print(B1_List)
         '''Rows below examine wire gauge to know which to one we will use'''
         for row in B1_List:#print(row['Quantity'], row['Strip A'])#print(row['Quantity'])# == 1:
             if (row['Wire Gauge 1-9'])==str(Wire_Ga):
                 rio_wire_gauge_list.append(row)                
-                print(rio_wire_gauge_list)
+                #print(rio_wire_gauge_list)
         for row in rio_wire_gauge_list:
             Q =(row['Quantity'])
             W =(row['Wire Gauge 1-9'])
-            SA =(row['Strip A'])
-            SB =(row['Strip B'])
-            OAL =(row['OAL'])
+            SA =float(row['Strip A'])
+            SB =float(row['Strip B'])
+            OAL =float(row['OAL'])
             #sa =SA/10
             print(Q)
             print(W)
             print(SA)
             print(SB)
             print(OAL)
-            
-            
-#             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
-#                   + str(oal) + ' -s ' + str(strip_a_flt) + ' -c '
-#                   + str(strip_b_flt) + ' -n ' + str(Quantity)
-#                   + ' -g ' + str(Wire_Ga))
-        #print(rio_wire_gauge_list[1])
-                #print(B1_List[row]['Quantity'])
-                #print(B1_List[1]['Quantity'])
-                #print(row[B1_List])
-                
-            #else:
-                #print('no')
-                
-#         for row in B1_List:
-#             #print(row['Quantity'], row['Strip A'])
-#             #print(row['Quantity'])# == 1:
-#             if (row['Wire Gauge 1-5'])=='1':
-#                 print('yes 1')
-#             #else:
-#                 #print('no')
-#             
-#         for row in B1_List:
-#             #print(row['Quantity'], row['Strip A'])
-#             #print(row['Quantity'])# == 1:
-#             if (row['Wire Gauge 1-5'])=='2':
-#                 print('yes 2')
-#             #else:
-#                 #print('no')
-#                 
-#         for row in B1_List:
-#             #print(row['Quantity'], row['Strip A'])
-#             #print(row['Quantity'])# == 1:
-#             if (row['Wire Gauge 1-5'])=='3':
-#                 print('yes 3')
-#             #else:
-#                 #print('no')
-#                 
-#         for row in B1_List:
-#             #print(row['Quantity'], row['Strip A'])
-#             #print(row['Quantity'])# == 1:
-#             if (row['Wire Gauge 1-5'])=='4':
-#                 print('yes 4')
-#             #else:
-#                 #print('no')
-#                 
-#         for row in B1_List:
-#             #print(row['Quantity'], row['Strip A'])
-#             #print(row['Quantity'])# == 1:
-#             if (row['Wire Gauge 1-5'])=='5':
-#                 print('yes 5')
-#             #else:
-#                 #print('no')
-#             #print(line['Wire Guage 1-5'])
+            os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
+                  + str(OAL) + ' -s ' + str(SA) + ' -c '
+                  + str(SB) + ' -n ' + str(Q)
+                  + ' -g ' + str(W))
+            Q=[]
+            W=[]
+            SA=[]
+            SB=[]
+            OAL=[]
+            #continue button
+            #cancel
          
         
 async def Dec():
@@ -223,9 +182,9 @@ async def Commands(arr):
     
 
     
-async def Serial():
+async def Serial(self):
     
-    ser = serial.Serial ("/dev/ttyUSB1",9600, 8, 'N', 1, timeout=.1)
+    ser = serial.Serial ("/dev/ttyUSB0",9600, 8, 'N', 1, timeout=.1)
     while True:
         output = ser.readline()
 
@@ -235,7 +194,7 @@ async def Serial():
         arr = list(filter((r2).__ne__, arr))
         arr = list(filter((r3).__ne__, arr))
         arr = list(filter((r4).__ne__, arr))
-        
+        print(arr)
 
 
 async def main():
@@ -249,19 +208,33 @@ async def main():
         arr = list(filter((r2).__ne__, arr))
         arr = list(filter((r3).__ne__, arr))
         arr = list(filter((r4).__ne__, arr))
-        #task = asyncio.create_task(Serial())
+        await asyncio.create_task(self.Serial())
+        #await task1
         #wire_ga = wire_ga_hmi
         
-        #print(arr)
+        
         if len(arr) >1 and arr[0]<3:
             await Commands(arr)
             
-        if len(arr)==5 and arr[0]==5:
+        #if len(arr) >4 and arr[0]==5:
+        if len(arr) >1 and arr[0]==5:
             print(arr)
-            await Rio(arr)
+            rio_stop=(arr)
+            #res = await shield(Rio(arr, rio_stop))
+            #task = asyncio.create_task(Rio(arr, rio_stop))
+            
+            await asyncio.create_task(Rio(arr, rio_stop))
+            #if arr[1]==5:
+                #asyncio.create_task(Rio(arr, rio_stop)).cancel()
+        #while(len(arr))>1:
+            #len(arr) >1 and (arr)!=5,5,1
         
+        if len(arr)==3 and arr[0]==5:
+            rio_stop=(arr)
+            print(rio_stop)
+            #await Rio(arr)
         
-        
+               
         #await Dec()
         #await Mng()
         Quantity = []
@@ -271,7 +244,9 @@ async def main():
         OAL = []        
         Page_Num = []
         Obj_Num = []
-
+        rio_stop=[]
+        
+        
 
 if __name__ == '__main__':
     asyncio.run(main())
