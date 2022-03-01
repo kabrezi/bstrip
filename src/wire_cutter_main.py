@@ -151,10 +151,16 @@ def MNG_PNL(arr):
     Obj_Num.extend(arr)
     Wire_Ga = Obj_Num[3]
     mult=Obj_Num[4]
+    
     global ready_mng
+    ready_mng=0
     global mng_stop
+    mng_stop=0
+    global message
+    global butt_text
+    global begin_aph
+    global final_aph
     length=0
-
     '''A seperate routine to read Build Kit One CSV'''
     
     with open ('/home/pi/bstrip/src/MNG.csv', "r") as Build_Two:
@@ -172,7 +178,11 @@ def MNG_PNL(arr):
             SB =float(row['Strip B'])
             OAL =float(row['OAL'])
             exq =Q*mult
-            while ready_rio==0:
+            message =str(OAL)
+            butt_text = str.encode(b0.txt=\""+message+" in. next\"")
+            ser.write(butt_text + terminator)
+            print(butt_text + terminator)
+            while ready_mng==0:
                 time.sleep(.25)
             if mng_stop==1:
                 print('stop_pressed')
@@ -182,6 +192,7 @@ def MNG_PNL(arr):
                   + str(SB) + ' -n ' + str(exq)
                   + ' -g ' + str(W))
 
+            prev_text = str.encode("t0.txt=\""+message+"in. Done\"")
             ready_mng=0
             Q=[]
             W=[]
