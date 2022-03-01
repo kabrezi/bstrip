@@ -288,62 +288,52 @@ def Tetra(arr):
     Page_Num = arr[0]
     Obj_Num.extend(arr)
     Wire_Ga = Obj_Num[3]
-    mult = Obj_Num[4]
+    Quantity = Num[4]
 
-    global ready_dec
-    ready_dec = 0
-    global dec_stop
-    dec_stop = 0
+    global ready_tetra
+    ready_tetra = 0
+    global tetra_stop
+    tetra_stop = 0
     global message
     global butt_text
     global begin_aph
     global final_aph
-    length = 0
-    ser.write(begin_aph + terminator)
-    '''A seperate routine to read Build Kit One CSV'''
+    ser.write(final_aph + terminator)
 
-    with open('/home/pi/bstrip/src/DEC.csv', "r") as Build_Three:
-        f = csv.DictReader(Build_Three)  # print(B1_List)#print(B1_List[0]['Quantity'])#print(B1_List[1]['Quantity'])
-        B3_List = list(f)
-        '''Rows below examine wire gauge to know which to one we will use'''
-        for row in B3_List:  # print(row['Quantity'], row['Strip A'])#print(row['Quantity'])# == 1:
-            if (row['Wire Gauge 1-9']) == str(Wire_Ga):
-                dec_wire_gauge_list.append(row)
+    if Wire_Ga == 1:
+        oal = 6 * 2.54
+    if Wire_Ga == 2:
+        oal = 12 * 2.54
+    if Wire_Ga == 3:
+        oal = 24 * 2.54
+    if Wire_Ga == 4:
+        oal = 30 * 2.54
+    if Wire_Ga == 5:
+        oal = 36 * 2.54
+    if Wire_Ga == 6:
+        oal = 42 * 2.54
+    if Wire_Ga == 7:
+        oal = 48 * 2.54
+    if Wire_Ga == 8:
+        oal = 54 * 2.54
+    if Wire_Ga == 9:
+        oal = 60 * 2.54
+    if Wire_Ga == 10:
+        oal = 66 * 2.54
+    if Wire_Ga == 11:
+        oal = 72 * 2.54
+    if Wire_Ga == 12:
+        oal = 78 * 2.54
+    if Wire_Ga == 13:
+        oal = 84 * 2.54
 
-        for row in dec_wire_gauge_list:
-            Q = (row['Quantity'])
-            W = (row['Wire Gauge 1-9'])
-            SA = float(row['Strip A'])
-            SB = float(row['Strip B'])
-            OAL = float(row['OAL'])
-            exq = Q * mult
-            message = str(OAL)
-            butt_text = str.encode("b0.txt=\"" + message + " in.next\"")
-            ser.write(butt_text + terminator)
-            print(butt_text + terminator)
-            while ready_dec == 0:
-                time.sleep(.25)
-            if dec_stop == 1:
-                print('stop_pressed')
-                break
-            os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
-                      + str(OAL) + ' -s ' + str(SA) + ' -c '
-                      + str(SB) + ' -n ' + str(exq)
-                      + ' -g ' + str(W))
-            prev_text = str.encode("t0.txt=\"" + message + " in.Done\"")
-            ser.write(prev_text + terminator)
-            ready_dec = 0
-            Q = []
-            W = []
-            SA = []
-            SB = []
-            OAL = []
-            ser.write(end_text + terminator)
-            if dec_stop == 1:
-                print('stop_pressed')
-                break
 
-        ser.write(final_aph + terminator)
+    # Tetra PAk program call
+    os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
+              + str(oal) + ' -s 1.2 -c 1.2 -n ' + str(Quantity)
+              + ' -g ' + str(Wire_Ga))
+
+    ser.write(final_aph + terminator)
 
 
 ser = serial.Serial ("/dev/ttyUSB0", 9600, 8, 'N', 1, timeout=.1)
