@@ -21,6 +21,8 @@ global butt_text
 global message
 global begin_aph
 global final_aph
+global tetra_stop
+global ready_tetra
 
 r = 255
 r1 = 101
@@ -35,6 +37,8 @@ mng_stop = []
 ready_mng = 0
 dec_stop = []
 ready_dec = 0
+tetra_stop = 0
+ready_tetra = 0
 terminator = b'\xff\xff\xff'
 start_text = str.encode("t0.txt=\"Online Test..\"")
 good = str.encode("t0.txt=\"Successful\"")
@@ -276,6 +280,72 @@ def DEC_PNL(arr):
         ser.write(final_aph + terminator)
 
 
+def Tetra(arr):
+
+
+    Page_Num = []
+    Obj_Num = []
+    Page_Num = arr[0]
+    Obj_Num.extend(arr)
+    Wire_Ga = Obj_Num[3]
+    mult = Obj_Num[4]
+
+    global ready_dec
+    ready_dec = 0
+    global dec_stop
+    dec_stop = 0
+    global message
+    global butt_text
+    global begin_aph
+    global final_aph
+    length = 0
+    ser.write(begin_aph + terminator)
+    '''A seperate routine to read Build Kit One CSV'''
+
+    with open('/home/pi/bstrip/src/DEC.csv', "r") as Build_Three:
+        f = csv.DictReader(Build_Three)  # print(B1_List)#print(B1_List[0]['Quantity'])#print(B1_List[1]['Quantity'])
+        B3_List = list(f)
+        '''Rows below examine wire gauge to know which to one we will use'''
+        for row in B3_List:  # print(row['Quantity'], row['Strip A'])#print(row['Quantity'])# == 1:
+            if (row['Wire Gauge 1-9']) == str(Wire_Ga):
+                dec_wire_gauge_list.append(row)
+
+        for row in dec_wire_gauge_list:
+            Q = (row['Quantity'])
+            W = (row['Wire Gauge 1-9'])
+            SA = float(row['Strip A'])
+            SB = float(row['Strip B'])
+            OAL = float(row['OAL'])
+            exq = Q * mult
+            message = str(OAL)
+            butt_text = str.encode("b0.txt=\"" + message + " in.next\"")
+            ser.write(butt_text + terminator)
+            print(butt_text + terminator)
+            while ready_dec == 0:
+                time.sleep(.25)
+            if dec_stop == 1:
+                print('stop_pressed')
+                break
+            os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
+                      + str(OAL) + ' -s ' + str(SA) + ' -c '
+                      + str(SB) + ' -n ' + str(exq)
+                      + ' -g ' + str(W))
+            prev_text = str.encode("t0.txt=\"" + message + " in.Done\"")
+            ser.write(prev_text + terminator)
+            ready_dec = 0
+            Q = []
+            W = []
+            SA = []
+            SB = []
+            OAL = []
+            ser.write(end_text + terminator)
+            if dec_stop == 1:
+                print('stop_pressed')
+                break
+
+        ser.write(final_aph + terminator)
+
+
 ser = serial.Serial ("/dev/ttyUSB0", 9600, 8, 'N', 1, timeout=.1)
 while True:
     output = ser.readline()
@@ -361,6 +431,18 @@ while True:
 
     if len(arr) > 1 and arr[0] == 7 and arr[1] == 8:
         ready_dec = 1
+
+    #     ```TASK 9```
+    task9 = Thread(target=Tetra, args=[arr]) # task to perform length based auto cuts for Tetra Pak
+
+    if len(arr) > 3 and arr[0] == 10:
+        task9.start()
+
+    if len(arr) > 1 and arr[0] ==10 and arr[1] == 4:
+        tetra_stop =1
+
+    if len(arr) > 1 and arr[0] == 10 and arr[1] == 7:
+        ready_tetra = 1
 
     #   ```Status Check```
     if len(arr) > 1 and arr[0] == 5 and arr[1] == 1:
