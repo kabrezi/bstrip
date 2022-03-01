@@ -116,7 +116,7 @@ class Application:
             strip_pos = .03
         if gauge == 2:
             strip_pos = .03
-        if gauge == 3:
+        if gauge == 3:# 18AWG Blue MTW
             strip_pos = .03
         if gauge == 4:
             strip_pos = .03
@@ -185,7 +185,7 @@ class Application:
         '''Move the drive to the given distance as measured from the "wire
         start".
         '''
-        await self.set_wire_start()
+        #await self.set_wire_start()
 
         desired_pos = self.wire_start + distance_cm / DRIVE_SCALE_CM
 
