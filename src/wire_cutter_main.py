@@ -16,6 +16,10 @@ global ready_mng
 global mng_stop
 global ready_dec
 global dec_stop
+global butt_text
+global message
+global begin_aph
+global final_aph
 
 r = 255
 r1 = 101
@@ -31,8 +35,12 @@ ready_mng=0
 dec_stop=[]
 ready_dec=0
 terminator = b'\xff\xff\xff'
-butt_text = str.encode('b0.txt=\"ready ?\"')
-end_text = str.encode('b0.txt=\"finished\"')
+start_text = str.encode("t0.txt=\"Online Test..\"")
+good = str.encode("t0.txt=\"Successful\"")
+end_text = str.encode("b0.txt=\"Complete\"")
+begin_aph = str.encode("b0.aph=127")
+final_aph = str.encode("b0.aph=0")
+
 # butt_text = str.encode('b0.txt=\'+str(r)')
 # butt_text = str.encode('b0.txt=\''+str(r))
 
@@ -42,7 +50,7 @@ def strip(Wire_Ga):
 
 
 def advance():
-    os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -a advance_3')
+    os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -a advance_10')
     print('done')
     
 def release():
@@ -61,7 +69,6 @@ def custom(Obj_Num):
     strip_b_flt = numpy.float(Strip_B)
     OAL = (Obj_Num[6]/10)
     oal = numpy.float(OAL)
-    
     #Custom cut program call command
     os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
               + str(oal) + ' -s ' + str(strip_a_flt) + ' -c '
@@ -70,6 +77,7 @@ def custom(Obj_Num):
     
 def RIO_PNL(arr):
     
+    
     rio_wire_gauge_list = []
     Page_Num = []
     Obj_Num = []
@@ -77,10 +85,17 @@ def RIO_PNL(arr):
     Obj_Num.extend(arr)
     Wire_Ga = Obj_Num[3]
     mult=Obj_Num[4]
+    
     global ready_rio
+    ready_rio=0
     global rio_stop
+    rio_stop=0
+    global message
+    global butt_text
+    global begin_aph
+    global final_aph
     length=0
-
+    ser.write(begin_aph + terminator)
     '''A seperate routine to read Build Kit One CSV'''
     
     with open ('/home/pi/bstrip/src/RIO.csv', "r") as Build_One:
@@ -98,13 +113,8 @@ def RIO_PNL(arr):
             SB =float(row['Strip B'])
             OAL =float(row['OAL'])
             exq =Q*mult
-#             print(Q, W, SA, SB, OAL)
-#             oal=bytearray(struct.pack("d",OAL))
-#             print(oal)
-#             print(struct.pack("d",OAL))
-#             print(struct.pack("f",OAL))
-#             oal=(struct.pack("b",OAL))
-#             print(length)
+            message =str(OAL)
+            butt_text = str.encode("b0.txt=\""+ message +" in. next\"")
             ser.write(butt_text + terminator)
             print(butt_text + terminator)
             while ready_rio==0:
@@ -112,12 +122,13 @@ def RIO_PNL(arr):
             if rio_stop==1:
                 print('stop_pressed')
                 break
-            #ser.write(end_text + terminator)
             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
                   + str(OAL) + ' -s ' + str(SA) + ' -c '
                   + str(SB) + ' -n ' + str(exq)
                   + ' -g ' + str(W))
 
+            prev_text = str.encode("t0.txt=\""+ message +" in. Done\"")
+            ser.write(prev_text +terminator)
             ready_rio=0
             Q=[]
             W=[]
@@ -128,7 +139,9 @@ def RIO_PNL(arr):
             if rio_stop==1:
                 print('stop_pressed')
                 break
-
+        
+        ser.write(final_aph + terminator)
+        
 def MNG_PNL(arr):
     
     mng_wire_gauge_list = []
@@ -159,21 +172,11 @@ def MNG_PNL(arr):
             SB =float(row['Strip B'])
             OAL =float(row['OAL'])
             exq =Q*mult
-#             print(Q, W, SA, SB, OAL)
-#             oal=bytearray(struct.pack("d",OAL))
-#             print(oal)
-#             print(struct.pack("d",OAL))
-#             print(struct.pack("f",OAL))
-#             oal=(struct.pack("b",OAL))
-#             print(length)
-            ser.write(butt_text + terminator)
-            print(butt_text + terminator)
             while ready_rio==0:
                 time.sleep(.25)
             if mng_stop==1:
                 print('stop_pressed')
                 break
-            #ser.write(end_text + terminator)
             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
                   + str(OAL) + ' -s ' + str(SA) + ' -c '
                   + str(SB) + ' -n ' + str(exq)
@@ -220,13 +223,6 @@ def DEC_PNL(arr):
             SB =float(row['Strip B'])
             OAL =float(row['OAL'])
             exq =Q*mult
-#             print(Q, W, SA, SB, OAL)
-#             oal=bytearray(struct.pack("d",OAL))
-#             print(oal)
-#             print(struct.pack("d",OAL))
-#             print(struct.pack("f",OAL))
-#             oal=(struct.pack("b",OAL))
-#             print(length)
             ser.write(butt_text + terminator)
             print(butt_text + terminator)
             while ready_dec==0:
@@ -234,7 +230,6 @@ def DEC_PNL(arr):
             if dec_stop==1:
                 print('stop_pressed')
                 break
-            #ser.write(end_text + terminator)
             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
                   + str(OAL) + ' -s ' + str(SA) + ' -c '
                   + str(SB) + ' -n ' + str(exq)
@@ -260,42 +255,54 @@ while True:
     arr = list(filter((r1).__ne__, arr))
     arr = list(filter((r2).__ne__, arr))
     arr = list(filter((r3).__ne__, arr))
-    arr = list(filter((r4).__ne__, arr))#print(arr)
+    arr = list(filter((r4).__ne__, arr))
     
     if len(arr) >1:
         Page_Num = arr[0]
-        Obj_Num.extend(arr)    
-    ```TASK 1```
+        Obj_Num.extend(arr)
+    
+        
+#     `TASK 1`
     task1 = Thread(target=advance, args=[])#task to advance wire 3 cm
 
     if len(Obj_Num) >0 and Page_Num == 2 and Obj_Num[1] ==7:
         if len(Obj_Num)> 2:
             task1.start()
-    ```TASK 2```        
+            
+            
+#     ```TASK 2```        
     if len(Obj_Num) >3 and Page_Num == 2 and Obj_Num[1] ==6:
         Wire_Ga = Obj_Num[3]
         task2 = Thread(target=strip, args=[Wire_Ga])
         print(Wire_Ga)
         task2.start()
-    ```TASK 3```    
+        
+        
+#     ```TASK 3```    
     task3 = Thread(target=release, args=[])#task to open cutter
     
     if len(Obj_Num) >0 and Page_Num == 2 and Obj_Num[1] ==5:
         print('Open Stripper')
         task3.start()
-    ```TASK 4```
+        
+        
+#     ```TASK 4```
     task4 = Thread(target=fullcut, args=[])#task to cut completely through the wire
     
     if len(Obj_Num) >0 and Page_Num == 2 and Obj_Num[1] ==4:
         print('Full Cut')
         task4.start()
-    ```TASK 5```    
+        
+        
+#     ```TASK 5```    
     task5 = Thread(target=custom, args=[Obj_Num])#task to perform a custom cut
     
     if len(Obj_Num) >6 and Page_Num == 1 and Obj_Num[1] ==6:
         task5 = Thread(target=custom, args=[Obj_Num])
         task5.start()
-    ```TASK 6```    
+        
+        
+#     ```TASK 6```    
     task6 = Thread(target=RIO_PNL, args=[arr])#task to perform build cut
     
     if len(arr) >3 and arr[0]==5:
@@ -306,7 +313,9 @@ while True:
 
     if len(arr) >1 and arr[0]==5 and arr[1]==8:
         ready_rio=1
-    ```TASK 7```    
+        
+        
+#     ```TASK 7```    
     task7 = Thread(target=MNG_PNL, args=[arr])#task to perform build cut
     
     if len(arr) >3 and arr[0]==6:
@@ -317,7 +326,9 @@ while True:
 
     if len(arr) >1 and arr[0]==6 and arr[1]==8:
         ready_mng=1
-    ```TASK 8```    
+        
+
+#     ```TASK 8```    
     task8 = Thread(target=DEC_PNL, args=[arr])#task to perform build cut
     
     if len(arr) >3 and arr[0]==7:
@@ -329,27 +340,11 @@ while True:
     if len(arr) >1 and arr[0]==7 and arr[1]==8:
         ready_dec=1
         
+#   ```Status Check```
+    if len(arr) ==2 and arr[0]==5 and arr[1]==1:
+        ser.write(start_text + terminator)
+        time.sleep(2)
+        ser.write(good + terminator)
+        
     Page_Num=[]
     Obj_Num=[]
-    
-
-    
-
-    
-
-    
-
-        
-
-        
-
-        
-
-        
-
-#     if ready_rio==0:
-#         A='keith'+str(ready_rio)
-
-    
-
-
