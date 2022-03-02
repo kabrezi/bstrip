@@ -53,6 +53,7 @@ final_aph = str.encode("b0.aph=0")
 
 def strip(Wire_Ga):
     os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -a strip_' + str(Wire_Ga))
+    print('done')
 
 
 def advance():
@@ -62,10 +63,12 @@ def advance():
 
 def release():
     os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -a release')
+    print('done')
 
 
 def fullcut():
     os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -a break')
+    print('done')
 
 
 def custom(Obj_Num):
@@ -82,6 +85,7 @@ def custom(Obj_Num):
               + str(oal) + ' -s ' + str(strip_a_flt) + ' -c '
               + str(strip_b_flt) + ' -n ' + str(Quantity)
               + ' -g ' + str(Wire_Ga))
+    print('done')
 
 
 def RIO_PNL(arr):
@@ -148,7 +152,7 @@ def RIO_PNL(arr):
                 break
 
         ser.write(final_aph + terminator)
-
+        print('done')
 
 def MNG_PNL(arr):
     mng_wire_gauge_list = []
@@ -212,6 +216,8 @@ def MNG_PNL(arr):
                 print('stop_pressed')
                 break
         ser.write(final_aph + terminator)
+        print('done')
+
 
 def DEC_PNL(arr):
 
@@ -278,6 +284,7 @@ def DEC_PNL(arr):
                 break
 
         ser.write(final_aph + terminator)
+        print('done')
 
 
 def Tetra(arr):
@@ -333,6 +340,8 @@ def Tetra(arr):
               + ' -g 3')
 
     ser.write(final_aph + terminator)
+    print('done')
+
 
 def status():
         ser.write(start_text + terminator)
@@ -349,79 +358,92 @@ while True:
     arr = list(filter((r2).__ne__, arr))
     arr = list(filter((r3).__ne__, arr))
     arr = list(filter((r4).__ne__, arr))
-#     print(arr)
+    
     if len(arr) > 1:
         Obj_Num.extend(arr)
 
     #     `TASK 1`
-    task1 = Thread(target=advance, args=[])  # task to advance wire 3 cm
+    task1 = Thread(target=advance, args=[])  # task to advance wire 10 cm
 
-    if len(Obj_Num) > 0 and Page_Num == 2 and Obj_Num[1] == 7:
+    if len(Obj_Num) > 0 and arr[0] == 2 and Obj_Num[1] == 7:
         if len(Obj_Num) > 2:
             task1.start()
+            print('Advance 10cm')
 
     #     ```TASK 2```
-    if len(Obj_Num) > 3 and Page_Num == 2 and Obj_Num[1] == 6:
+    if len(Obj_Num) > 3 and arr[0] == 2 and Obj_Num[1] == 6:
         Wire_Ga = Obj_Num[3]
         task2 = Thread(target=strip, args=[Wire_Ga])
+        print('Manual Strip')
         print(Wire_Ga)
         task2.start()
 
     #     ```TASK 3```
     task3 = Thread(target=release, args=[])  # task to open cutter
 
-    if len(Obj_Num) > 0 and Page_Num == 2 and Obj_Num[1] == 5:
+    if len(Obj_Num) > 0 and arr[0] == 2 and Obj_Num[1] == 5:
         print('Open Stripper')
+        print(arr)
         task3.start()
 
     #     ```TASK 4```
     task4 = Thread(target=fullcut, args=[])  # task to cut completely through the wire
 
-    if len(Obj_Num) > 0 and Page_Num == 2 and Obj_Num[1] == 4:
+    if len(Obj_Num) > 0 and arr[0] == 2 and Obj_Num[1] == 4:
         print('Full Cut')
         task4.start()
 
     #     ```TASK 5```
     task5 = Thread(target=custom, args=[Obj_Num])  # task to perform a custom cut
 
-    if len(Obj_Num) > 6 and Page_Num == 1 and Obj_Num[1] == 6:
+    if len(Obj_Num) > 6 and arr[0] == 1 and Obj_Num[1] == 6:
         task5 = Thread(target=custom, args=[Obj_Num])
+        print('Custom Cut')
         task5.start()
 
     #     ```TASK 6```
     task6 = Thread(target=RIO_PNL, args=[arr])  # task to perform build cut
 
     if len(arr) > 3 and arr[0] == 5:
+        print('Rio Panel')
         task6.start()
 
     if len(arr) > 1 and arr[0] == 5 and arr[1] == 5:
+        print('Rio Stop')
         rio_stop = 1
 
     if len(arr) > 1 and arr[0] == 5 and arr[1] == 8:
+        print('Rio Ready')
         ready_rio = 1
 
     #     ```TASK 7```
     task7 = Thread(target=MNG_PNL, args=[arr])  # task to perform build cut
 
     if len(arr) > 3 and arr[0] == 6:
+        print('Mng Panel')
         task7.start()
 
     if len(arr) > 1 and arr[0] == 6 and arr[1] == 5:
+        print('Mng Stop')
         mng_stop = 1
 
     if len(arr) > 1 and arr[0] == 6 and arr[1] == 8:
+        print('Mng Ready')
         ready_mng = 1
 
     #     ```TASK 8```
     task8 = Thread(target=DEC_PNL, args=[arr])  # task to perform build cut
 
     if len(arr) > 3 and arr[0] == 7:
+        print('Dec Panel')
         task8.start()
 
     if len(arr) > 1 and arr[0] == 7 and arr[1] == 5:
+        print('Dec Stop')
         dec_stop = 1
 
     if len(arr) > 1 and arr[0] == 7 and arr[1] == 8:
+        print('Dec Ready')
         ready_dec = 1
 
     #     ```TASK 9```
@@ -433,19 +455,23 @@ while True:
 #         task9.start()
     #print(Page_Num)
     if len(arr) > 1 and Page_Num ==10 and Obj_Num[0] == 3:
+        print('Tetra Pak Wire Cut')
         task9.start()
         Page_Num = []
     
     if len(arr) > 1 and arr[0] == 10 and arr[1] == 4:
+        print('Tetra Stop')
         tetra_stop =1
 
     if len(arr) > 1 and arr[0] == 10 and arr[1] == 7:
+        print('Tetra Ready')
         ready_tetra = 1
 
     #   ```Status Check```
     task10 = Thread(target=status)
     
     if len(arr) > 1 and arr[0] == 5 and arr[1] == 1:
+        print('Online Status Check')
         task10.start()
 
 
