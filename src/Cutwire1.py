@@ -80,7 +80,7 @@ class Application:
                 position=math.nan,
                 velocity=2.0,
                 maximum_torque=2.0,
-                stop_position=0.0,
+                stop_position=-0.0095,
                 feedforward_torque=-.30,
                 query=True)
             if result and result.values[moteus.Register.POSITION] < 0.01:
@@ -117,7 +117,7 @@ class Application:
         if gauge == 2:
             strip_pos = .03
         if gauge == 3:# 18AWG Blue MTW
-            strip_pos = .03
+            strip_pos = .017
         if gauge == 4:
             strip_pos = .03
         if gauge == 5:
@@ -140,7 +140,7 @@ class Application:
                 feedforward_torque=-0.1,
                 watchdog_timeout=math.nan,
                 query=True)
-            if result and result.values[moteus.Register.POSITION] < 0.035:
+            if result and result.values[moteus.Register.POSITION] < 0.03:
                 break
 
         # We wait a bit for the insulation to deform.

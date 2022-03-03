@@ -74,12 +74,25 @@ def fullcut():
 def custom(Obj_Num):
     Quantity = Obj_Num[3]
     Wire_Ga = Obj_Num[4]
-    Strip_A = (Obj_Num[5] / 10)
+    strip_in = (Obj_Num[5] / 10)
+    Strip_A = strip_in * 2.54
+    Strip_B = strip_in * 2.54
     strip_a_flt = numpy.float(Strip_A)
-    Strip_B = (Obj_Num[5] / 10)
     strip_b_flt = numpy.float(Strip_B)
-    OAL = (Obj_Num[6] / 10)
-    oal = numpy.float(OAL)
+    print(Obj_Num)
+    print(strip_a_flt)
+    print(strip_b_flt)
+    if len(Obj_Num) >7:
+        hex_mult = (Obj_Num[7] * 256)
+        preOAL = hex_mult + Obj_Num[6]
+        OAL = preOAL / 10
+    else:
+        OAL = (Obj_Num[6] / 10)
+    intL =  int(OAL)
+    lcm = OAL * 2.54
+    print(OAL)
+    oal = numpy.float(lcm)
+    print(oal)
     # Custom cut program call command
     os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
               + str(oal) + ' -s ' + str(strip_a_flt) + ' -c '
@@ -123,6 +136,8 @@ def RIO_PNL(arr):
             SA = float(row['Strip A'])
             SB = float(row['Strip B'])
             OAL = float(row['OAL'])
+            lcm = OAL * 2.54
+            print(lcm)
             exq = Q * mult
             message = str(OAL)
             butt_text = str.encode("b0.txt=\"" + message + " in. next\"")
@@ -134,7 +149,7 @@ def RIO_PNL(arr):
                 print('stop_pressed')
                 break
             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
-                      + str(OAL) + ' -s ' + str(SA) + ' -c '
+                      + str(lcm) + ' -s ' + str(SA) + ' -c '
                       + str(SB) + ' -n ' + str(exq)
                       + ' -g ' + str(W))
 
@@ -188,9 +203,11 @@ def MNG_PNL(arr):
             SA = float(row['Strip A'])
             SB = float(row['Strip B'])
             OAL = float(row['OAL'])
+            lcm = OAL * 2.54
+            print(lcm)
             exq = Q * mult
             message = str(OAL)
-            butt_text = str.encode("b0.txt =\"" + message + " in. next\"")
+            butt_text = str.encode("b0.txt=\"" + message + " in. next\"")
             ser.write(butt_text + terminator)
             print(butt_text + terminator)
             while ready_mng == 0:
@@ -199,7 +216,7 @@ def MNG_PNL(arr):
                 print('stop_pressed')
                 break
             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
-                      + str(OAL) + ' -s ' + str(SA) + ' -c '
+                      + str(lcm) + ' -s ' + str(SA) + ' -c '
                       + str(SB) + ' -n ' + str(exq)
                       + ' -g ' + str(W))
 
@@ -256,6 +273,8 @@ def DEC_PNL(arr):
             SA = float(row['Strip A'])
             SB = float(row['Strip B'])
             OAL = float(row['OAL'])
+            lcm = OAL * 2.54
+            print(lcm)
             exq = Q * mult
             message = str(OAL)
             butt_text = str.encode("b0.txt=\"" + message + " in.next\"")
@@ -267,7 +286,7 @@ def DEC_PNL(arr):
                 print('stop_pressed')
                 break
             os.system('sudo python3 /home/pi/bstrip/src/Cutwire1.py -l '
-                      + str(OAL) + ' -s ' + str(SA) + ' -c '
+                      + str(lcm) + ' -s ' + str(SA) + ' -c '
                       + str(SB) + ' -n ' + str(exq)
                       + ' -g ' + str(W))
             prev_text = str.encode("t0.txt=\"" + message + " in.Done\"")
@@ -353,12 +372,13 @@ while True:
     output = ser.readline()
 
     arr = (list(bytearray(output)))
+    #print(arr)
     arr = list(filter((r).__ne__, arr))
     arr = list(filter((r1).__ne__, arr))
     arr = list(filter((r2).__ne__, arr))
     arr = list(filter((r3).__ne__, arr))
     arr = list(filter((r4).__ne__, arr))
-    
+#     print(arr)
     if len(arr) > 1:
         Obj_Num.extend(arr)
 
